@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/eventhub   # ← DBの場所と名前
+    username: eventhub                               # ← DBユーザー
+    password: eventhub                               # ← DBパスワード
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update   # テーブルを自動で作成・更新
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true       # 実行したSQLをログ出力する
+
+  rabbitmq:
+    host: localhost      # RabbitMQサーバの場所
+    port: 5672           # ポート番号（Dockerの設定と一致させる）
+    username: guest      # RabbitMQのユーザー
+    password: guest      # RabbitMQのパスワード
+
+logging:
+  level:
+    org.springframework: INFO
+    org.hibernate.SQL: DEBUG
+
+app:
+  discord-webhook-url: "https://discord.com/api/webhooks/1417183835241713704/ko1481-q46Ydz_6LY7i1Qw63A0Vaq3UqPU1kUXgz2ciIh4_ColRnUtwBd9h10iY4hlQ0"

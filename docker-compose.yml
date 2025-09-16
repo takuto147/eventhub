@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    container_name: eventhub-postgres
+    environment:
+      POSTGRES_DB: eventhub
+      POSTGRES_USER: eventhub
+      POSTGRES_PASSWORD: eventhub
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "eventhub"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbit:
+    image: rabbitmq:3.13-management
+    container_name: eventhub-rabbit
+    ports:
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # 管理UI http://localhost:15672
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
