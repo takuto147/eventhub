@@ -58,3 +58,39 @@ publisher.publish(source, rawBody);
 return ResponseEntity.accepted().build();
 }
 }
+
+
+
+//-------------------memo--------------------------------
+@PostMapping("/{source}")
+@Transactional
+public ResponseEntity<?> receive(
+    @PathVariable String source,     // URLの {source} 部分（例: github）
+    @RequestBody String rawBody,     // リクエストの中身（payload、JSON文字列）
+    @RequestHeader(name = "X-Signature", required = false) String sig // 署名
+) {
+    // (1) 署名チェック
+    boolean ok = (sig != null) && hmac.verify(rawBody, sig);
+
+    // (2) JSONのidフィールドを取り出して eventId に使う
+    String eventId = rawBody.replaceAll(".*\"id\"\\s*:\\s*\"([^\"]+)\".*", "$1");
+    if (eventId == null || eventId.isBlank()) eventId = String.valueOf(rawBody.hashCode());
+
+    // (3) すでに保存済みなら無視（同じイベントが2回来ても重複保存しない）
+    if (repo.findBySourceAndEventId(source, eventId).isPresent()) {
+        return ResponseEntity.ok().build();
+    }
+
+    // (4) DBに保存
+    InboundEvent e = new InboundEvent();
+    e.setSource(source);
+    e.setEventId(eventId);
+    e.setPayload(rawBody);
+    e.setSignatureOk(ok);
+    repo.save(e);
+
+    // (5) RabbitMQに送信（後でWorkerが処理する）
+    publisher.publish(source, rawBody);
+
+    return ResponseEntity.accepted().build();
+}
